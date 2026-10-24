@@ -1,0 +1,6 @@
+# third-party repos cloned for research, not redistributed
+research/repos/
+# local scratch
+build/
+__pycache__/
+*.pyc
