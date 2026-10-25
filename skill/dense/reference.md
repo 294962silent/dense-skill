@@ -1,36 +1,25 @@
-# dense — reference (optional, not part of the measured arm)
+# dense — reference (loaded on demand)
 
-`SKILL.md` is the whole measured skill: 123 tokens, the body that won the benchmark. This file is extra guidance for cases the five rules leave ambiguous. Loading it costs tokens and was **not** part of the experiment, so read it only when you need it.
+`SKILL.md` is the measured core. This file is the optional toolkit guide; loading it costs tokens and was **not** part of the output-compression benchmark.
 
-## Budget by task class
+## The `dense` CLI
 
-| Task | Keep | Shape | Ceiling |
-|---|---|---|---|
-| Decision (A vs B, yes/no) | pick, one deciding reason, rejected option | 1-3 sentences | 60 words |
-| Diagnosis | cause, fix, verify | one line each | 90 words |
-| Code change | changed lines plus 1-2 context lines | code block, then ≤3 bullets | 3 bullets |
-| Extraction | every requested field | table or JSON | no prose around it |
-| Explanation | mechanism, one example only if it prevents a misread | ≤1 paragraph per idea | 5 paragraphs |
-| Procedure | ordered steps, one action each | numbered list | order never compressed |
-| Document / report | every finding, no padding | sections mirroring the ask | no unrequested section |
+`dense.py` lives next to this file. Three jobs: keep things **out** of the prompt, and never lose what was removed.
 
-## Model-speak to delete
+```bash
+python dense.py index                     # scan ~/.agents/skills -> ~/.dense/index.json
+python dense.py resolve "extract tables from a pdf" --k 3   # name, tokens, path
+python dense.py show office-xlsx          # full SKILL.md, only when you picked it
+python dense.py compress --budget 800 < build.log > build.min.log   # handle on stderr
+python dense.py recover <handle>          # exact original bytes
+python dense.py stats                     # operations, bytes in/out
+```
 
-delve, crucial, intricate, pivotal, testament, underscore, leverage (verb), meticulous, garner, boast, foster, showcase, seamless, robust, comprehensive, holistic, unlock (figurative), elevate, empower, enhance, "it is worth noting", "in today's landscape".
+**Name index, schema on demand.** Every installed skill's description costs tokens in every turn. `resolve` returns three candidates (~100 tokens) instead of the whole catalog; `show` fetches the one you picked. Measured on 68 installed skills: catalog ~3.4k tokens vs 3-line hit list ~104.
 
-Plain verbs instead: "is" not "serves as", "has" not "boasts", "uses" not "leverages".
+**Fail-open.** If compression cannot shrink the input (or anything throws), the original bytes are written out unchanged and no handle is minted. A broken compressor degrades to no compressor.
 
-## Structural padding
-
-Negative parallelism ("not just X, but Y"). Rule-of-three lists written for rhythm. "As we can see" / "let's look at". A closing paragraph that repeats the opening. A summary table that repeats the bullets above it.
-
-## Full sentences first
-
-Security warning; irreversible or destructive action; ordered steps where a fragment could scramble the order; the user repeats the question (the compressed answer failed); you are asking the user a question. Resume after the risky part.
-
-## Documents
-
-Compression there is lossless on information: strip padding, keep every finding, number, and caveat. The conversational register does not apply to anything the user will send onward.
+**Reversible.** A compressed log is lossy; the exact original is stored under `~/.dense/ccr/<handle>.txt` before the compressed text is emitted. Quote the handle; `recover` gets the bytes back. Never compress something you cannot recover.
 
 ## Long logs and tool output (measured)
 
@@ -43,6 +32,14 @@ Forcing a table on a 2-3 item mapping adds headers and separators and came out l
 ## Multi-turn
 
 The saving in a long conversation comes from every turn being short, not from a running summary. A "don't repeat settled context" rule measured *worse* (−33% vs −42%) and lost final-answer accuracy, because the model spent the last turn re-checking what it might have dropped.
+
+## Documents
+
+Compression there is lossless on information: strip padding, keep every finding, number, and caveat. The conversational register does not apply to anything the user will send onward.
+
+## Full sentences first
+
+Security warning; irreversible or destructive action; ordered steps where a fragment could scramble the order; the user repeats the question (the compressed answer failed); you are asking the user a question. Resume after the risky part.
 
 ## Pre-send check
 

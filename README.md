@@ -1,6 +1,6 @@
 # dense — 一个省 token 但不牺牲准确性的输出技能
 
-一个 120 token 的 Agent Skill：让模型少写废话，同时把任务做完。
+一个约 140 token 的 Agent Skill：让模型少写废话，同时把任务做完。长日志和技能查找交给随附的 `dense.py`——名字索引 + 可逆压缩。
 
 在 16 道题 × 10 次重复的对照实验里（`deepseek-v4.1-flash`，480 次调用）：
 
@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/294962silent/dense-skill/main/skill
 
 任何读 `SKILL.md` 的宿主都能用（Claude Code、Codex、Cursor、DSH 等）。说「简洁点 / 少点 token / 别啰嗦」触发。
 
-## 为什么只有 120 token
+## 为什么只有 140 token
 
 社区里最有名的几个压缩技能是 1000–1700 token，而证据指向相反：注入的每一 token 每次调用都要付钱。`caveman-micro` 用 1/6 的体积打赢原版；本文的实验里，同一套规则写成 123 token 时计费输出 −42%，写成 342 token 时**反而 +28%**——长规则让模型多想了 76 个推理 token。
 
@@ -64,3 +64,25 @@ python analyze.py results/repro.jsonl
 ## License
 
 MIT
+
+## 后记（10-25）：名字索引 + 可逆压缩
+
+skill/dense/dense.py 把两件 prompt 表达不了的事做成了工具：
+
+``bash
+python dense.py index                          # 扫描已装技能
+python dense.py resolve "提取 pdf 表格" --k 3    # 名字索引：3 行候选 ~100 token
+python dense.py show office-xlsx               # 选中后才读全文
+python dense.py compress --budget 800 < app.log  # 90-92% 压缩，stderr 给 handle
+python dense.py recover <handle>               # 逐字节原文
+``
+
+实测（deepseek-v4.1-flash，同一模型）：
+
+| 实验 | 结果 |
+|---|---|
+| 技能路由，全量目录 vs 3 行索引 | 1683 → **78** token（−95%），调参集 100% / 留出集 70% |
+| 1.8k token 日志，原文 vs 压缩 | 2474 → **266** token（−89%），答对率 100% vs 100% |
+| 26 题对 caveman | 计费输出 254 vs 395，可见文本 47 vs 125，通过率 96.2% vs 90.4%，总成本 487 vs 1601 |
+
+细节与失败模式见 [REPORT-ADDENDUM.md](REPORT-ADDENDUM.md)。一句话：**fail-open 只能防崩溃，防不住静默丢信息**——第一版压到 98% 但答对率 40%，因为把错误行旁边那行内存上限丢了。
