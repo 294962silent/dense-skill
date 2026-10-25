@@ -32,6 +32,18 @@ Security warning; irreversible or destructive action; ordered steps where a frag
 
 Compression there is lossless on information: strip padding, keep every finding, number, and caveat. The conversational register does not apply to anything the user will send onward.
 
+## Long logs and tool output (measured)
+
+Pasting a tool result back is the most expensive habit, but it only matters when the log is long. Quote the one decisive line and cite `file:line`; do not reproduce the rest. Measured on a 40-line k8s describe: 245 → 140 tokens for the same answer. On a short log the same rule changes nothing.
+
+## Tables are not free (measured)
+
+Forcing a table on a 2-3 item mapping adds headers and separators and came out longer than one line (211 → 328 tokens on a six-service list). Use a table only at ≥3 items × ≥3 fields, or when the user asks for one.
+
+## Multi-turn
+
+The saving in a long conversation comes from every turn being short, not from a running summary. A "don't repeat settled context" rule measured *worse* (−33% vs −42%) and lost final-answer accuracy, because the model spent the last turn re-checking what it might have dropped.
+
 ## Pre-send check
 
 1. Does line one contain the answer?

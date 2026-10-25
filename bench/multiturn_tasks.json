@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "M1",
+      "name": "dedup function under accreting constraints",
+      "turns": [
+        "Write a Python function that removes duplicates from a list, keeping first-seen order.",
+        "It must be O(n), not O(n^2). Items are strings.",
+        "Python 3.10, standard library only.",
+        "Empty list and None must return [] instead of crashing.",
+        "Now give the final version only."
+      ],
+      "checks": {
+        "must_include": ["def ", "none", "(seen|dict\\.fromkeys|set\\()", "append|dict"]
+      }
+    },
+    {
+      "id": "M2",
+      "name": "itinerary under accreting constraints",
+      "turns": [
+        "Plan a 3-day trip to Kyoto.",
+        "Total budget is 80,000 JPY including lodging.",
+        "Day 2 must be indoor-friendly in case it rains.",
+        "Use at most two temples across the whole trip.",
+        "Final itinerary, compact."
+      ],
+      "checks": {
+        "must_include": ["day 1|d1", "day 2|d2", "day 3|d3", "80,?000", "rain|indoor", "temple"]
+      }
+    },
+    {
+      "id": "M3",
+      "name": "refactor with review constraints",
+      "turns": [
+        "Refactor this: def f(x): return [i for i in x if i]",
+        "Keep the signature and behavior identical.",
+        "Add a docstring and type hints.",
+        "Add two pytest cases.",
+        "Final code only."
+      ],
+      "checks": {
+        "must_include": ["def f\\(", "->", "\"\"\"", "def test_", "assert"]
+      }
+    }
+  ]
+}
