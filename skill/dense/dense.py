@@ -59,6 +59,20 @@ ALIASES = {
     "缺陷": "bug issue", "报告": "issue report", "问题单": "issue",
     "发布": "publish", "部署": "deploy", "表格": "spreadsheet xlsx",
     "文档": "docx document", "演示": "pptx slides", "截图": "screenshot image",
+    # brevity / output-length vocabulary: the words people actually use when they
+    # want a shorter answer. Without these, such a query matches no skill at all.
+    "压缩": "compress concise brief tokens", "简洁": "concise brief short",
+    "简短": "brief short", "精简": "concise brief trim", "啰嗦": "verbose brief",
+    "废话": "padding verbose", "省点": "fewer tokens reduce", "省 token": "fewer tokens",
+    "少点": "fewer less", "短一点": "brief short", "输出": "output",
+    "回答": "answer reply", "回复": "reply answer", "日志": "log",
+    # more task verbs that show up in Chinese prompts
+    "合并": "merge", "冲突": "conflict merge", "重构": "refactor",
+    "计划": "plan", "需求": "prd requirements", "上下文": "context",
+    "会话": "session", "技能": "skill", "插件": "plugin", "工具": "tool",
+    "搜索": "search", "查找": "search find", "查一下": "search find",
+    "知识库": "knowledge notes", "图表": "chart diagram visualize",
+    "画图": "chart diagram", "清理": "clean prune", "删除": "delete remove",
 }
 
 
@@ -111,14 +125,14 @@ def load_index() -> dict:
     return json.loads(INDEX.read_text(encoding="utf-8"))
 
 
-def resolve(query: str, k: int = 3) -> int:
-    data = load_index()
-    items = data["items"]
+def rank(query: str, k: int = 3, items: list | None = None) -> list:
+    """Return the top-k index items for a query. Pure function over the index."""
+    if items is None:
+        items = load_index()["items"]
     docs = [tokenize(i["name"] + " " + i["desc"]) for i in items]
     q = expand(query)
     if not q:
-        print("no query terms", file=sys.stderr)
-        return 2
+        return []
     n = len(docs)
     avg = sum(len(d) for d in docs) / max(n, 1)
     df = Counter()
@@ -140,7 +154,19 @@ def resolve(query: str, k: int = 3) -> int:
         if s > 0:
             scored.append((s, item))
     scored.sort(key=lambda x: -x[0])
-    hits = [i for _, i in scored[:k]] or items[:k]
+    return [i for _, i in scored[:k]]
+
+
+def resolve(query: str, k: int = 3) -> int:
+    items = load_index()["items"]
+    q = expand(query)
+    if not q:
+        print("no query terms", file=sys.stderr)
+        return 2
+    hits = rank(query, k, items)
+    if not hits:
+        print(f"# no skill matched: {query}", file=sys.stderr)
+        return 1
     print(f"# {len(hits)} of {len(items)} skills  (~{sum(h['index_tokens'] for h in hits)} tokens)")
     for h in hits:
         print(f"{h['name']}\t{h['body_tokens']}\t{h['path']}")
